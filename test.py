@@ -5,7 +5,7 @@ import docker
 
 client = docker.from_env()
 c = client.containers.run(
-    image="opthub/hypervolume",
+    image="takatokinoshita/indicator-exe-time-limited-hypervolume",
     command=["vv"],
     stdin_open=True,
     detach=True,
