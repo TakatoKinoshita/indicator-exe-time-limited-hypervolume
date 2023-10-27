@@ -1,2 +1,2 @@
-{"objective": [1, 1]}
-[{"objective": [0, 2]}, {"objective": [2, 0]}]
+{"objective": [0.5, 0.5], "info": {"exe_time": 20}}
+[{"objective": [0, 1], "info": {"exe_time": 20}, "score": 0.11000000000000011}, {"objective": [1, 0], "info": {"exe_time": 20}, "score": 0.2100000000000002}]

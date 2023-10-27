@@ -18,9 +18,7 @@ from pygmo import (  # pylint: disable=no-name-in-module
     pareto_dominance,
 )
 
-
 LOGGER = logging.getLogger(__name__)
-
 
 REF_POINT_JSONSCHEMA = """{
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -32,63 +30,63 @@ REF_POINT_JSONSCHEMA = """{
 }"""
 
 SOLUTION_TO_SCORE_JSONSCHEMA = """{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Solution to score",
-  "type": "object",
-  "properties": {
-    "objective": {
-      "OneOf": [
-        {"type": "null"},
-        {"type": "array", "minItems": 1, "items": {"type": "number"}}
-      ]
-    },
-    "constraint": {
-      "OneOf": [
-        {"type": ["number", "null"]},
-        {"type": "array", "minItems": 1, "items": {"type": "number"}}
-      ]
-    },
-    "info": {
-        "type": "object",
-        "properties": {
-            "exe_time": {"type": "number"}
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Solution to score",
+    "type": "object",
+    "properties": {
+        "objective": {
+            "OneOf": [
+                {"type": "null"},
+                {"type": "array", "minItems": 1, "items": {"type": "number"}}
+            ]
         },
-        "required": ["exe_time"]
+        "constraint": {
+            "OneOf": [
+                {"type": ["number", "null"]},
+                {"type": "array", "minItems": 1, "items": {"type": "number"}}
+            ]
+        },
+        "info": {
+            "type": "object",
+            "properties": {
+                "exe_time": {"type": "number", "exclusiveMinimum": 0}
+            },
+            "required": ["exe_time"]
+        }
     },
     "required": ["info"]
-  }
 }"""
 
 SOLUTIONS_SCORED_JSONSCHEMA = """{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Solutions scored",
-  "type": "array",
-  "items": {
-    "type": "object",
-    "properties": {
-      "objective": {
-        "OneOf": [
-          {"type": "null"},
-          {"type": "array", "minItems": 1, "items": {"type": "number"}}
-        ]
-      },
-      "constraint": {
-        "OneOf": [
-          {"type": ["number", "null"]},
-          {"type": "array", "minItems": 1, "items": {"type": "number"}}
-        ]
-      },
-      "info": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Solutions scored",
+    "type": "array",
+    "items": {
         "type": "object",
         "properties": {
-            "exe_time": {"type": "number"}
+            "objective": {
+                "OneOf": [
+                    {"type": "null"},
+                    {"type": "array", "minItems": 1, "items": {"type": "number"}}
+                ]
+            },
+            "constraint": {
+                "OneOf": [
+                    {"type": ["number", "null"]},
+                    {"type": "array", "minItems": 1, "items": {"type": "number"}}
+                ]
+            },
+            "info": {
+                "type": "object",
+                "properties": {
+                    "exe_time": {"type": "number", "exclusiveMinimum": 0}
+                },
+                "required": ["exe_time"]
+            },
+            "score": {"type": "number"}
         },
-        "required": ["exe_time"]
-      },
-      "score": {"type": "number"}
-    },
-    "required": ["info", "score"]
-  }
+        "required": ["info", "score"]
+    }
 }"""
 
 
@@ -135,7 +133,7 @@ def feasible(solution):
     objective = solution.get("objective")
     constraint = solution.get("constraint")
     return (None not in np.array(objective)) and (
-        constraint is None or np.all(np.array(constraint) <= 0.0)
+            constraint is None or np.all(np.array(constraint) <= 0.0)
     )
 
 
@@ -179,7 +177,7 @@ def compute_hv(solution_to_score, solutions_scored, ref_point):
     if not ref_point:
         LOGGER.warning("HV_REF_POINT is not specified. Try to use the nadir point.")
         if (
-            len(feasible_objectives) == 1
+                len(feasible_objectives) == 1
         ):  # HV=0 since nadir() requires at least two feasible points
             LOGGER.warning(
                 "The nadir point requires at least two feasible points. HV is zero."
@@ -235,11 +233,31 @@ def compute_hv(solution_to_score, solutions_scored, ref_point):
     return score
 
 
+def check_limit(solution_to_score, solutions_scored, limit, default_lim=8*60*60):
+    LOGGER.info("Sum exe_time...")
+    total_time = 0
+    if solutions_scored:
+        total_time = sum(map(lambda x: x["info"]["exe_time"], solutions_scored))
+    LOGGER.debug(f"So far {total_time = }")
+    total_time = total_time + solution_to_score["info"]["exe_time"]
+    LOGGER.debug(f"Now {total_time = }")
+    LOGGER.info("...Summed")
+
+    LOGGER.info("Get limit...")
+    if not limit:
+        LOGGER.warning(f"limit is not specified. limit is set to {default_lim}.")
+        limit = default_lim
+    LOGGER.debug(f"{limit = }")
+    LOGGER.info("...Got")
+
+    return total_time > limit
+
+
 @click.command(help="Hypervolume indicator.")
 @click.option(
     "-r", "--ref-point", callback=json_list, default=None, help="Reference points."
 )
-@click.option("-l", "--limit", type=click.FloatRange(min=0, min_open=True), help="Time limit.")
+@click.option("-l", "--limit", type=click.FloatRange(min=0, min_open=True), default=None, help="Time limit.")
 @click.option("-q", "--quiet", count=True, help="Be quieter.")
 @click.option("-v", "--verbose", count=True, help="Be more verbose.")
 @click.option(
@@ -288,31 +306,25 @@ def main(ctx, ref_point, limit, quiet, verbose, config):  # pylint: disable=unus
     validate(solutions_scored, json.loads(SOLUTIONS_SCORED_JSONSCHEMA))
     LOGGER.info("...Validated")
 
-    LOGGER.info("Sum exe_time...")
-    total_time = 0
-    if solutions_scored:
-        total_time = sum(map(lambda x: x["info"]["exe_time"], solutions_scored))
-    LOGGER.debug(f"So far {total_time = }")
-    total_time = total_time + solution_to_score["info"]["exe_time"]
-    LOGGER.debug(f"Now {total_time = }")
-    LOGGER.info("...Summed")
+    LOGGER.info("Check limitation...")
+    is_skip_hv = check_limit(solution_to_score, solutions_scored, limit)
+    LOGGER.debug(f"{is_skip_hv = }")
+    LOGGER.info("...Checked")
 
-    LOGGER.info("Get the best value...")
-    best = 0
-    if solutions_scored:
-        best = solutions_scored[-1]["score"]
-    LOGGER.debug(f"{best = }")
-    LOGGER.info("...Got")
+    if is_skip_hv:
+        LOGGER.info("Skipping HV calculation...")
+        LOGGER.info("Get the best value...")
+        best = 0
+        if solutions_scored:
+            best = solutions_scored[-1]["score"]
+        LOGGER.debug(f"{best = }")
+        LOGGER.info("...Got")
 
-    LOGGER.info(f"Compare {total_time = } and {limit = }")
-    if total_time > limit:
-        LOGGER.debug(f"{total_time = } excess {limit = }")
         print(json.dumps({"score": best}))
-        LOGGER.info("Early return.")
+        LOGGER.info("...Skipped")
         return
-    LOGGER.debug(f"{total_time = } is smaller than {limit = }")
-    LOGGER.info("Continue process.")
 
+    LOGGER.info("Continue process to HV calculation.")
     score = compute_hv(solution_to_score, solutions_scored, ref_point)
     print(json.dumps({"score": score}))
 
