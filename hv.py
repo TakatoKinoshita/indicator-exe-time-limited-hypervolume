@@ -234,6 +234,7 @@ def compute_hv(solution_to_score, solutions_scored, ref_point):
 
 
 def check_limit(solution_to_score, solutions_scored, limit, default_lim=8*60*60):
+    """check limit"""
     LOGGER.info("Sum exe_time...")
     total_time = 0
     if solutions_scored:
@@ -271,7 +272,7 @@ def check_limit(solution_to_score, solutions_scored, limit, default_lim=8*60*60)
 )
 @click.version_option("1.0.0")
 @click.pass_context
-def main(ctx, ref_point, limit, quiet, verbose, config):  # pylint: disable=unused-argument
+def main(ctx, ref_point, limit, quiet, verbose, config):  # pylint: disable=unused-argument,too-many-arguments
     """Calculate hypervolume indicator."""
     verbosity = 10 * (quiet - verbose)
     log_level = logging.WARNING + verbosity
