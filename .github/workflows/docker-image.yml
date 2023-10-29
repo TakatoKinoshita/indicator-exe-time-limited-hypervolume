@@ -15,9 +15,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag opthub/hypervolume:latest
+      run: docker build . --file Dockerfile --tag takatokinoshita/indicator-exe-time-limited-hypervolume:latest
     - name: Test the Docker image
       run: |
-        time cat population.2obj.txt | docker run --rm -i opthub/hypervolume:latest
-        time cat population.2obj.constr.txt | docker run --rm -i opthub/hypervolume:latest
-        time cat population.3obj.txt | docker run --rm -i opthub/hypervolume:latest
+        time cat population.2obj.txt | docker run --rm -i takatokinoshita/indicator-exe-time-limited-hypervolume:latest
+        time cat population.2obj.constr.txt | docker run --rm -i takatokinoshita/indicator-exe-time-limited-hypervolume:latest
+        time cat population.3obj.txt | docker run --rm -i takatokinoshita/indicator-exe-time-limited-hypervolume:latest
