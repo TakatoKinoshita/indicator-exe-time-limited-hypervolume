@@ -238,16 +238,16 @@ def check_limit(solution_to_score, solutions_scored, limit, default_lim=8*60*60)
     total_time = 0
     if solutions_scored:
         total_time = sum(map(lambda x: x["info"]["exe_time"], solutions_scored))
-    LOGGER.debug(f"So far {total_time = }")
+    LOGGER.debug("So far total_time = %f", total_time)
     total_time = total_time + solution_to_score["info"]["exe_time"]
-    LOGGER.debug(f"Now {total_time = }")
+    LOGGER.debug("Now total_time = %f", total_time)
     LOGGER.info("...Summed")
 
     LOGGER.info("Get limit...")
     if not limit:
-        LOGGER.warning(f"limit is not specified. limit is set to {default_lim}.")
+        LOGGER.warning("limit is not specified. limit is set to %d.", default_lim)
         limit = default_lim
-    LOGGER.debug(f"{limit = }")
+    LOGGER.debug("limit = %d", limit)
     LOGGER.info("...Got")
 
     return total_time > limit
@@ -314,7 +314,7 @@ def main(ctx, ref_point, limit, quiet, verbose, config):  # pylint: disable=unus
 
     LOGGER.info("Check limitation...")
     is_skip_hv = check_limit(solution_to_score, solutions_scored, limit)
-    LOGGER.debug(f"{is_skip_hv = }")
+    LOGGER.debug("is_skip_hv = %r", is_skip_hv)
     LOGGER.info("...Checked")
 
     if is_skip_hv:
@@ -323,7 +323,7 @@ def main(ctx, ref_point, limit, quiet, verbose, config):  # pylint: disable=unus
         best = 0
         if solutions_scored:
             best = solutions_scored[-1]["score"]
-        LOGGER.debug(f"{best = }")
+        LOGGER.debug("best = %f", best)
         LOGGER.info("...Got")
 
         print(json.dumps({"score": best}))
