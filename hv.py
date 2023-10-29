@@ -4,7 +4,6 @@ Hypervolume indicator.
 """
 import json
 import logging
-import sys
 from os import path
 from traceback import format_exc
 
@@ -258,7 +257,13 @@ def check_limit(solution_to_score, solutions_scored, limit, default_lim=8*60*60)
 @click.option(
     "-r", "--ref-point", callback=json_list, default=None, help="Reference points."
 )
-@click.option("-l", "--limit", type=click.FloatRange(min=0, min_open=True), default=None, help="Time limit.")
+@click.option(
+    "-l",
+    "--limit",
+    type=click.FloatRange(min=0, min_open=True),
+    default=None,
+    help="Time limit."
+)
 @click.option("-q", "--quiet", count=True, help="Be quieter.")
 @click.option("-v", "--verbose", count=True, help="Be more verbose.")
 @click.option(
